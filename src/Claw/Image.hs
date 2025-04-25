@@ -4,10 +4,12 @@ module Claw.Image (
     getSize,
     toJpg,
     smallerJpg,
+    smallerJpgs,
 ) where
 
 import Claw.Control (mapBoth)
-import Claw.FilePath
+import Claw.FilePath (getBaseName, getExt, hasExt, (<.>), (</>))
+import Claw.FileSystem (lsdir)
 import Claw.Internal.Numeric (mulRII)
 import Control.Exception (PatternMatchFail (..), throw)
 import System.Process (callProcess, readProcess)
@@ -53,10 +55,16 @@ clampSmaller x (w, h) =
 
 -- | Convert to 90 quality jpg. Arguments are dst_dir and src_file.
 toJpg :: FilePath -> FilePath -> IO FilePath
-toJpg = convert (0,0) 90 "jpg"
+toJpg = convert (0, 0) 90 "jpg"
 
 -- | Convert to 90 quality jpg, and resize so smallest axis <= maxDim, preserving aspect ratio.
 smallerJpg :: Int -> FilePath -> FilePath -> IO FilePath
-smallerJpg maxDim dst_dir src_file = do
+smallerJpg maxDim dstDir src_file = do
     newDims <- clampSmaller maxDim <$> getSize src_file
-    convert newDims 90 "jpg" dst_dir src_file
+    convert newDims 90 "jpg" dstDir src_file
+
+-- | Convert all files with the specified extension in srcDir to reduced-size jpgs in dstDir.
+smallerJpgs :: String -> Int -> FilePath -> FilePath -> IO ()
+smallerJpgs ext maxDim srcDir dstDir = do
+    srcFiles <- filter (hasExt ext) <$> lsdir srcDir
+    mapM_ (smallerJpg maxDim dstDir) srcFiles
