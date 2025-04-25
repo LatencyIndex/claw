@@ -3,6 +3,7 @@ module Claw.Video (
     getSubtitles,
     probe,
     cut,
+    reencode,
 ) where
 
 import Claw.FilePath
@@ -33,3 +34,9 @@ cut t0 t1 src_file dst_basename =
         dt = t1 - t0
      in
         callProcess "ffmpeg" ["-i", src_file, "-ss", showDuration t0, "-t", showDuration dt, "-vcodec", "copy", "-acodec", "copy", dst_file]
+
+-- | Re-encode video as h265-encoded mp4. Quality is between 0 (best) and 51 (worst). 24 seems to be a good compromise.
+reencode :: Int -> FilePath -> FilePath -> IO ()
+reencode quality src_file dst_basename =
+    let dst_file = dst_basename <.> ".mp4"
+    in callProcess "ffmpeg" ["-i", src_file, "-vcodec", "libx265", "-crf", show quality, dst_file]
