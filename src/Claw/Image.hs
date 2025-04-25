@@ -11,14 +11,13 @@ import Claw.Utils.Numeric (mulRII)
 import Control.Exception (PatternMatchFail (..), throw)
 import System.Process (callProcess, readProcess)
 
-{- | Convert image to given format, resolution, and quality.
-Preserves aspect ratio if either x or y are 0. If both are 0, no resizing happens.
-Quality is on 1-100 scale, where 100 is best. Use 0 to keep estimated image quality.
-    Chroma channels are not subsampled at quality >= 90
-    Details: http://www.imagemagick.org/script/command-line-options.php#quality
-Format is determined by extension. Empty string keeps current format.
-Returns the destination filepath.
--}
+-- | Convert image to given format, resolution, and quality.
+-- Preserves aspect ratio if either x or y are 0. If both are 0, no resizing happens.
+-- Quality is on 1-100 scale, where 100 is best. Use 0 to keep estimated image quality.
+--     Chroma channels are not subsampled at quality >= 90
+--     Details: http://www.imagemagick.org/script/command-line-options.php#quality
+-- Format is determined by extension. Empty string keeps current format.
+-- Returns the destination filepath.
 convert :: (Int, Int) -> Int -> String -> FilePath -> FilePath -> IO FilePath
 convert (w, h) quality ext dst_dir src_file =
     let newExt = if null ext then getExt src_file else ext
@@ -43,18 +42,16 @@ getSize file = do
         [w, h] -> return (w, h)
         _ -> throw $ PatternMatchFail $ "Claw.Image.getSize: Failed to parse image dimensions of file " ++ file
 
-{- | Reduce the smallest dimension to <= x, keeping the aspect ratio.
-Useful when resizing large, very non-square images, where clamping the larger dimension
-could result in an unreasonably small smaller dimension.
--}
+-- | Reduce the smallest dimension to <= x, keeping the aspect ratio.
+-- Useful when resizing large, very non-square images, where clamping the larger dimension
+-- could result in an unreasonably small smaller dimension.
 clampSmaller :: Int -> (Int, Int) -> (Int, Int)
 clampSmaller x (w, h) =
     let scale = min 1 $ fromIntegral x / fromIntegral (min w h) :: Double
      in mapBoth (mulRII scale) (w, h)
 
-{- | Convert to jpg, and reduce the smallest axis to <= maxDim.
-Keeps aspect ratio and estimated quality.
--}
+-- | Convert to jpg, and reduce the smallest axis to <= maxDim.
+-- Keeps aspect ratio and estimated quality.
 smallerJpg :: Int -> FilePath -> FilePath -> IO FilePath
 smallerJpg maxDim dst_dir src_file = do
     newDims <- clampSmaller maxDim <$> getSize src_file

@@ -1,0 +1,5 @@
+# Formatting configuration options per https://fourmolu.github.io/config/
+# comma-style must be trailing to allow haddock-comments that precede the line they comment.
+comma-style: trailing
+haddock-style: single-line
+haddock-style-module: single-line

@@ -7,12 +7,11 @@ module Claw.Video (
 import Claw.FilePath
 import System.Process (callProcess)
 
-{- | Extract n-th subtitle track to destination directory.
-Output subtitle type is determined by extension.
-If it does not match the input type, conversion errors or data loss may occur.
-If src_file is @src_dir/file.mkv@, destination filename is @dst_dir/file.ext@
-Returns the destination filepath.
--}
+-- | Extract n-th subtitle track to destination directory.
+-- Output subtitle type is determined by extension.
+-- If it does not match the input type, conversion errors or data loss may occur.
+-- If src_file is @src_dir/file.mkv@, destination filename is @dst_dir/file.ext@
+-- Returns the destination filepath.
 getSubtitles :: Int -> String -> FilePath -> FilePath -> IO FilePath
 getSubtitles n ext dst_dir src_file =
     let dst_file = dst_dir </> getBaseName src_file <.> ext
