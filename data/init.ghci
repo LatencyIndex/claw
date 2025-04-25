@@ -3,6 +3,6 @@
 
 import Claw.Control
 import Claw.FilePath
-import Claw.IO
+import Claw.FileSystem
 import qualified Claw.Image as Image
 import qualified Claw.Video as Video

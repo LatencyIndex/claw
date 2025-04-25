@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Claw.IO (
+module Claw.FileSystem (
     INode (..),
     EpochTime,
     cd,
