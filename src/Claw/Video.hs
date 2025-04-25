@@ -11,7 +11,7 @@ import System.Process (callProcess)
 Output subtitle type is determined by extension.
 If it does not match the input type, conversion errors or data loss may occur.
 If src_file is @src_dir/file.mkv@, destination filename is @dst_dir/file.ext@
-Returns the destination filepath, regardless of if the file was successfully created.
+Returns the destination filepath.
 -}
 getSubtitles :: Int -> String -> FilePath -> FilePath -> IO FilePath
 getSubtitles n ext dst_dir src_file =
