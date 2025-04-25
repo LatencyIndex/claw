@@ -34,7 +34,7 @@ convert (w, h) quality ext dst_dir src_file =
         resizeArgs = if doResize then ["-resize", toResizeArg w ++ "x" ++ toResizeArg h] else []
         qualityArgs = if doQuality then ["-quality", show quality] else []
      in do
-            callProcess "convert" (resizeArgs ++ qualityArgs ++ [src_file, dst_file])
+            callProcess "magick" ([src_file] ++ resizeArgs ++ qualityArgs ++ [dst_file])
             return dst_file
 
 -- | Return the image size as (width, height). Throws on failure.
