@@ -5,6 +5,7 @@ module Claw.Video (
     cut,
     vconcat,
     reencode,
+    reencodeMany,
 ) where
 
 import Claw.FilePath
@@ -56,3 +57,8 @@ reencode :: Int -> FilePath -> FilePath -> IO ()
 reencode quality src_file dst_basename =
     let dst_file = dst_basename <.> ".mp4"
     in callProcess "ffmpeg" ["-i", src_file, "-vcodec", "libx265", "-crf", show quality, dst_file]
+
+reencodeMany :: Int -> [FilePath] -> FilePath -> IO ()
+reencodeMany quality srcFiles dstDir = mapM_ reencode' srcFiles where
+    toDstPath srcPath = dstDir </> getBaseName srcPath
+    reencode' srcFile = reencode quality srcFile (toDstPath srcFile)
