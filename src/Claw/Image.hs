@@ -2,6 +2,7 @@ module Claw.Image (
     -- | Image conversion utilities. Requires imagemagick.
     convert,
     getSize,
+    toJpg,
     smallerJpg,
 ) where
 
@@ -50,9 +51,12 @@ clampSmaller x (w, h) =
     let scale = min 1 $ fromIntegral x / fromIntegral (min w h) :: Double
      in mapBoth (mulRII scale) (w, h)
 
--- | Convert to jpg, and reduce the smallest axis to <= maxDim.
--- Keeps aspect ratio and estimated quality.
+-- | Convert to 90 quality jpg. Arguments are dst_dir and src_file.
+toJpg :: FilePath -> FilePath -> IO FilePath
+toJpg = convert (0,0) 90 "jpg"
+
+-- | Convert to 90 quality jpg, and resize so smallest axis <= maxDim, preserving aspect ratio.
 smallerJpg :: Int -> FilePath -> FilePath -> IO FilePath
 smallerJpg maxDim dst_dir src_file = do
     newDims <- clampSmaller maxDim <$> getSize src_file
-    convert newDims 0 "jpg" dst_dir src_file
+    convert newDims 90 "jpg" dst_dir src_file
