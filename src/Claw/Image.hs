@@ -59,9 +59,9 @@ toJpg = convert (0, 0) 90 "jpg"
 
 -- | Convert to 90 quality jpg, and resize so smallest axis <= maxDim, preserving aspect ratio.
 smallerJpg :: Int -> FilePath -> FilePath -> IO FilePath
-smallerJpg maxDim dstDir src_file = do
-    newDims <- clampSmaller maxDim <$> getSize src_file
-    convert newDims 90 "jpg" dstDir src_file
+smallerJpg maxDim dstDir srcFile = do
+    newDims <- clampSmaller maxDim <$> getSize srcFile
+    convert newDims 90 "jpg" dstDir srcFile
 
 -- | Convert all files with the specified extension in srcDir to reduced-size jpgs in dstDir.
 smallerJpgs :: String -> Int -> FilePath -> FilePath -> IO ()
