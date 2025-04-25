@@ -11,6 +11,7 @@ module Claw.FileSystem (
     pwd,
     renameFile,
     trash,
+    cp,
 ) where
 
 import Claw.FilePath
@@ -159,3 +160,6 @@ modifyFile f file = do
 -- | Move file or directory to trash.
 trash :: FilePath -> IO ()
 trash path = callProcess "trash" [path]
+
+cp :: FilePath -> FilePath -> IO ()
+cp = D.copyFile
