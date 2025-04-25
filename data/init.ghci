@@ -1,3 +1,7 @@
 -- Runtime configuration for the claw shell, executed at startup
 :set prompt "> "
-import Claw
+
+import qualified Claw.Video as Video
+import Claw.Control
+import Claw.FilePath
+import Claw.IO
