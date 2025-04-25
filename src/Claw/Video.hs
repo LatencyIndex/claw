@@ -15,7 +15,7 @@ Returns the destination filepath, regardless of if the file was successfully cre
 -}
 getSubtitles :: Int -> String -> FilePath -> FilePath -> IO FilePath
 getSubtitles n ext dst_dir src_file =
-    let dst_file = dst_dir </> baseName src_file <.> ext
+    let dst_file = dst_dir </> getBaseName src_file <.> ext
      in do
             callProcess "ffmpeg" ["-i", src_file, "-map", "0:s:" ++ show n, dst_file]
             return dst_file
