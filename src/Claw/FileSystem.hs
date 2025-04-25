@@ -2,7 +2,6 @@
 
 module Claw.FileSystem (
     INode (..),
-    EpochTime,
     cd,
     getINode,
     ll,
@@ -15,27 +14,17 @@ module Claw.FileSystem (
 import Claw.FilePath
 import Claw.Internal.List (align, padL, padR)
 import Claw.Internal.PrettyPrint (Pretty, pprint)
+import Claw.Time (UTCTime, getCurrentTimeZone, showTime, utcToZonedTime)
 import Data.Functor ((<&>))
 import Data.List (sort, transpose)
 import Data.Ord (comparing)
-import Data.Time.Clock (UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
-import Data.Time.Format (defaultTimeLocale, formatTime)
-import Data.Time.LocalTime (TimeZone, getCurrentTimeZone, utcToZonedTime)
 import Numeric (showFFloat)
 import System.Directory (renameFile)
 import qualified System.Directory as D
 import qualified System.FilePath as F
 import qualified System.IO as I
 import qualified System.Posix.Files as P
-import System.Posix.Types (EpochTime)
-
--- | Show UTC time in given timezone.
-showLocalTime :: TimeZone -> EpochTime -> String
-showLocalTime timezone posixTime = formatTime defaultTimeLocale "%Y-%m-%d %H:%M" localTime
-  where
-    utcTime = posixSecondsToUTCTime $ realToFrac posixTime :: UTCTime
-    localTime = utcToZonedTime timezone utcTime
 
 -- | Express the size of data in the most appropriate unit of bytes, as a (quantity, unit) pair.
 inXBytes :: Int -> (Float, String)
@@ -57,7 +46,7 @@ data INode = INode
     { -- | Only the name itself, without the path.
       name :: String,
       size :: Int,
-      modified :: EpochTime,
+      modified :: UTCTime,
       is_regular_file :: Bool,
       is_dir :: Bool,
       is_symlink :: Bool
@@ -74,7 +63,7 @@ instance Pretty [INode] where
         timezone <- getCurrentTimeZone
         let
             modCell :: INode -> String
-            modCell = showLocalTime timezone . modified
+            modCell = showTime . utcToZonedTime timezone . modified
             sizeCell :: INode -> (String, String)
             sizeCell x
                 | is_regular_file x = (showFFloat (Just 2) qty "", unit)
@@ -114,8 +103,8 @@ getINode file = do
     return
         INode
             { name = getFileName file,
-              size = fromIntegral (P.fileSize status),
-              modified = P.modificationTime status,
+              size = fromIntegral $ P.fileSize status,
+              modified = posixSecondsToUTCTime $ realToFrac $ P.modificationTime status,
               is_regular_file = P.isRegularFile status,
               is_dir = P.isDirectory status,
               is_symlink = P.isSymbolicLink status
