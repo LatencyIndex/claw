@@ -1,12 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Claw.Utils.PrettyPrint (
+module Claw.Internal.PrettyPrint (
     Pretty,
     pprint,
 ) where
 
-import Claw.Utils.List (mkTabular)
+import Claw.Internal.List (mkTabular)
 import Data.List (transpose)
 
 class Pretty a where

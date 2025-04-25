@@ -1,4 +1,4 @@
-module Claw.Utils.List (
+module Claw.Internal.List (
     align,
     mkTabular,
     padL,

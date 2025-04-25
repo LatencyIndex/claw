@@ -1,4 +1,4 @@
-module Claw.Utils.Numeric (
+module Claw.Internal.Numeric (
     mulRII,
 ) where
 

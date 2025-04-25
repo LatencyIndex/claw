@@ -6,8 +6,8 @@ module Claw.Files (
 ) where
 
 import Claw.FilePath
-import Claw.Utils.List (align, padL, padR)
-import Claw.Utils.PrettyPrint (Pretty, pprint)
+import Claw.Internal.List (align, padL, padR)
+import Claw.Internal.PrettyPrint (Pretty, pprint)
 import Data.List (transpose)
 import Data.Ord (comparing)
 import Data.Time.Clock (UTCTime)
