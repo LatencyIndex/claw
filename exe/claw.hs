@@ -24,5 +24,7 @@ main = do
           "--ghc-options", -- Supposedly replaced by repl-options, but doesn't work as-is.
           "-ignore-dot-ghci", -- Don’t read either ./.ghci or the other startup files when starting up.
           "--ghc-options",
-          "-ghci-script \"" ++ init_script ++ "\"" -- Run this script at repl startup.
+          "-ghci-script \"" ++ init_script ++ "\"", -- Run this script at repl startup.
+          "--ghc-options",
+          "-interactive-print=Claw.Utils.PrettyPrint.pprint" -- Function to use for printing values
         ]

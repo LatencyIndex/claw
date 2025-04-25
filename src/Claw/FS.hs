@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module Claw.FS (
     EpochTime,
     INode (..),
@@ -11,6 +13,7 @@ module Claw.FS (
 ) where
 
 import Claw.FilePath
+import Claw.Utils.PrettyPrint (Pretty, pshow, showBytes)
 import Data.Functor ((<&>))
 import Data.List (sort)
 import Data.Ord (comparing)
@@ -34,7 +37,7 @@ data INode = INode
     deriving (Eq, Show)
 
 instance Ord INode where
-    compare = comparing is_dir <> comparing (getExt . name) <> comparing name
+    compare = comparing (not . is_dir) <> comparing (getExt . name) <> comparing name
 
 getInode :: FilePath -> IO INode
 getInode file = do
@@ -58,6 +61,21 @@ ls = pwd >>= D.listDirectory
 -- Entries are sorted with directories first, then by file type, then by name.
 ll :: IO [INode]
 ll = ls >>= mapM getInode <&> sort
+
+instance Pretty [INode] where
+    pshow = pshow . fmap showINode
+        -- TODO: trim long filenames
+        -- TODO: human size and date formatting
+      where
+        showINode :: INode -> [String]
+        showINode x =
+            [ show (modified x),
+              if is_regular_file x then showBytes (size x) else "",
+              if is_regular_file x then "file" else if is_dir x then "dir" else "?",
+              if is_symlink x then "symlink" else "",
+              if is_regular_file x then getExt (name x) else "",
+              name x
+            ]
 
 -- | Obtain the current working directory as an absolute path.
 pwd :: IO FilePath
