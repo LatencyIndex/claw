@@ -5,6 +5,7 @@ module Claw.Audio (
 
 import Claw.FilePath
 import System.Process (callProcess)
+import System.Directory (copyFile)
 
 -- | Convert to destination file, with type determined by extension.
 ffconvert :: FilePath -> FilePath -> IO ()
@@ -17,5 +18,7 @@ toMp3 :: FilePath -> FilePath -> IO FilePath
 toMp3 dst_dir src_file =
     let dst_file = dst_dir </> getBaseName src_file <.> "mp3"
     in do
-        ffconvert src_file dst_file
+        if getExt src_file == ".mp3"
+        then copyFile src_file dst_file
+        else ffconvert src_file dst_file
         return dst_file
