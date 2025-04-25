@@ -21,5 +21,7 @@ main = do
         "--build-depends",
         "claw",
         "--ghc-options", -- Supposedly replaced by repl-options, but doesn't work as-is.
+        "-ignore-dot-ghci", -- Don’t read either ./.ghci or the other startup files when starting up.
+        "--ghc-options",
         "-ghci-script \"" ++ init_script ++ "\"" -- Run this script at repl startup.
         ]
