@@ -1,27 +1,22 @@
 module Claw.IO (
     ls,
-    lsDir,
     pwd,
     cd,
     modifyFile,
-    readFile',
     renameFile,
 ) where
 
-import Claw.Control
+import Claw.FilePath
 import System.Directory (renameFile)
 import qualified System.Directory as D
-import System.IO (readFile')
+import qualified System.FilePath as F
+import qualified System.IO as I
 
 {- | Names of all entries in the working directory, without the special entries @.@ and @..@
 Entires given relative to the working directory, i.e. only their filenames are returned.
 -}
 ls :: IO [FilePath]
 ls = pwd >>= D.listDirectory
-
--- | Absolute paths to all entries in the directory, without the special entries @.@ and @..@
-lsDir :: FilePath -> IO [FilePath]
-lsDir = mapM D.makeAbsolute <=< D.listDirectory
 
 -- | Obtain the current working directory as an absolute path.
 pwd :: IO FilePath
@@ -31,8 +26,22 @@ pwd = D.getCurrentDirectory
 cd :: FilePath -> IO ()
 cd = D.setCurrentDirectory
 
--- | Modify a file in-place.
--- TODO use a temporary file and rename instead, for safety
+-- | Uses a temporary file to avoid data loss.
 modifyFile :: (String -> String) -> FilePath -> IO ()
--- Use the non-lazy readFile', otherwise the file remains open and locked for writing.
-modifyFile f file = readFile' file <&> f >>= writeFile file
+modifyFile f file = do
+    -- Make a temporary file
+    let dir = getDir file
+        name = getFileName file
+    (tempName, tempHandle) <- I.openTempFile dir (name F.<.> "clawtmp")
+    -- Read target file contents
+    handle <- I.openFile file I.ReadMode
+    contents <- I.hGetContents handle
+    -- Write modified contents to temp file
+    let newContents = f contents
+    I.hPutStr tempHandle newContents
+    -- Close both files
+    I.hClose handle
+    I.hClose tempHandle
+    -- Replace original file with modified version
+    D.removeFile file
+    D.renameFile tempName file
