@@ -3,11 +3,14 @@ module Claw.Video (
     getSubtitles,
     probe,
     cut,
+    vconcat,
     reencode,
 ) where
 
 import Claw.FilePath
 import Claw.Time (Duration, showDuration)
+import System.Directory (removeFile)
+import System.IO (openTempFile, hPutStr, hClose)
 import System.Process (callProcess)
 
 -- | Extract n-th subtitle track to destination directory.
@@ -35,7 +38,20 @@ cut t0 t1 src_file dst_basename =
      in
         callProcess "ffmpeg" ["-i", src_file, "-ss", showDuration t0, "-t", showDuration dt, "-vcodec", "copy", "-acodec", "copy", dst_file]
 
--- | Re-encode video as h265-encoded mp4. Quality is between 0 (best) and 51 (worst). 24 seems to be a good compromise.
+vconcat :: [FilePath] -> FilePath -> IO ()
+vconcat files dst_basename = do
+    -- ffmpeg docs on concatenating media: https://trac.ffmpeg.org/wiki/Concatenate
+    (tempFile, tempHandle) <- openTempFile "." "tmp_ffmpeg_filelist_.txt"
+    hPutStr tempHandle listFileContents
+    hClose tempHandle
+    callProcess "ffmpeg" ["-f", "concat", "-safe", "0", "-i", tempFile, "-c", "copy", dst_file]
+    removeFile tempFile
+    where
+    dst_file = dst_basename <.> getExt (head files) :: String
+    pathToLine path = "file '" ++ path ++ "'"
+    listFileContents = unlines (pathToLine <$> files) :: String
+
+-- | Re-encode video as h265-encoded mp4. Quality is between 0 (best) and 51 (worst). 24 is a good compromise.
 reencode :: Int -> FilePath -> FilePath -> IO ()
 reencode quality src_file dst_basename =
     let dst_file = dst_basename <.> ".mp4"
