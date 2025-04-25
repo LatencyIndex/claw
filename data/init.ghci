@@ -2,7 +2,8 @@
 :set prompt "> "
 
 import Claw.Control
-import Claw.FS
 import Claw.FilePath
+import Claw.Files
+import Claw.IO
 import qualified Claw.Image as Image
 import qualified Claw.Video as Video

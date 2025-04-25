@@ -1,4 +1,5 @@
 module Claw.Utils.List (
+    align,
     mkTabular,
     padL,
     padR,
@@ -16,6 +17,12 @@ padR padding width xs = xs ++ replicate nb_missing padding
 
 -- | Pad every element to match the longest one.
 mkTabular :: a -> [[a]] -> [[a]]
-mkTabular x xs = padR x maxLen <$> xs
+mkTabular x = align (padR x)
+
+-- | Align a column by applying a padding function to all elements.
+-- The padding function must pad its argument to a specified length, if shorter.
+-- E.g. it can left-pad, right-pad, or pad both sides for central alignment.
+align :: (Int -> [a] -> [a]) -> [[a]] -> [[a]]
+align padFn xs = padFn maxLen <$> xs
   where
     maxLen = maximum (length <$> xs)
