@@ -10,6 +10,7 @@ module Claw.FileSystem (
     modifyFile,
     pwd,
     renameFile,
+    trash,
 ) where
 
 import Claw.FilePath
@@ -22,6 +23,7 @@ import Data.Ord (comparing)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Numeric (showFFloat)
 import System.Directory (renameFile)
+import System.Process (callProcess)
 import qualified System.Directory as D
 import qualified System.FilePath as F
 import qualified System.IO as I
@@ -153,3 +155,7 @@ modifyFile f file = do
     -- Replace original file with modified version
     D.removeFile file
     D.renameFile tempName file
+
+-- | Move file or directory to trash.
+trash :: FilePath -> IO ()
+trash path = callProcess "trash" [path]
