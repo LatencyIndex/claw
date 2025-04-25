@@ -6,6 +6,7 @@ module Claw.FileSystem (
     getINode,
     ll,
     ls,
+    lsdir,
     modifyFile,
     pwd,
     renameFile,
@@ -114,6 +115,11 @@ getINode file = do
 -- Entires given relative to the working directory, i.e. only their filenames are returned.
 ls :: IO [FilePath]
 ls = pwd >>= D.listDirectory
+
+-- | Names of all entries in the given directory, without the special entries @.@ and @..@
+-- Entires given relative to the same directory that dir is relative to.
+lsdir :: FilePath -> IO [FilePath]
+lsdir dir = D.listDirectory dir <&> fmap (dir </>)
 
 -- | All entries in the working directory, without the special entries @.@ and @..@
 -- Entries are sorted with directories first, then by file type, then by name.
