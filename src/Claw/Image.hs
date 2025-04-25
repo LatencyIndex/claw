@@ -7,7 +7,7 @@ module Claw.Image (
 
 import Claw.Control (mapBoth)
 import Claw.FilePath
-import Claw.Numeric (mulRII)
+import Claw.Utils.Numeric (mulRII)
 import Control.Exception (PatternMatchFail (..), throw)
 import System.Process (callProcess, readProcess)
 
