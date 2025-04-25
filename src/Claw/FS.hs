@@ -1,4 +1,4 @@
-module Claw.IO (
+module Claw.FS (
     ls,
     pwd,
     cd,
