@@ -1,38 +1,61 @@
 module Claw.Image (
-    -- | Image conversion utilities. Requires @imagemagick@.
-    resize,
+    -- | Image conversion utilities. Requires imagemagick.
+    convert,
     getSize,
+    smallerJpg,
 ) where
 
+import Claw.Control (mapBoth)
 import Claw.FilePath
+import Claw.Numeric (mulRII)
 import Control.Exception (PatternMatchFail (..), throw)
 import System.Process (callProcess, readProcess)
 
-{- | Resize image to given resolution and quality.
+{- | Convert image to given format, resolution, and quality.
 Preserves aspect ratio if either x or y are 0. If both are 0, no resizing happens.
 Quality is on 1-100 scale, where 100 is best. Use 0 to keep estimated image quality.
+    Chroma channels are not subsampled at quality >= 90
     Details: http://www.imagemagick.org/script/command-line-options.php#quality
+Format is determined by extension. Empty string keeps current format.
 Returns the destination filepath.
 -}
-resize :: (Int, Int) -> Int -> FilePath -> FilePath -> IO FilePath
-resize (x, y) quality dst_dir src_file =
-    let dst_file = dst_dir </> getFileName src_file
-        mkDim :: Int -> String
-        mkDim n
-            | n > 0 = show n
-            | otherwise = ""
-        doResize = x > 0 || y > 0
-        resizeArgs = if doResize then ["-resize", mkDim x ++ "x" ++ mkDim y] else []
+convert :: (Int, Int) -> Int -> String -> FilePath -> FilePath -> IO FilePath
+convert (w, h) quality ext dst_dir src_file =
+    let newExt = if null ext then getExt src_file else ext
+        dst_file = dst_dir </> getBaseName src_file <.> newExt
+        doResize = w > 0 || h > 0
         doQuality = 0 < quality
+        toResizeArg :: Int -> String
+        toResizeArg x
+            | x > 0 = show x
+            | otherwise = ""
+        resizeArgs = if doResize then ["-resize", toResizeArg w ++ "x" ++ toResizeArg h] else []
         qualityArgs = if doQuality then ["-quality", show quality] else []
      in do
             callProcess "convert" (resizeArgs ++ qualityArgs ++ [src_file, dst_file])
             return dst_file
 
--- | Return the image size. Throws on failure.
+-- | Return the image size as (width, height). Throws on failure.
 getSize :: FilePath -> IO (Int, Int)
 getSize file = do
     output <- readProcess "identify" ["-ping", "-format", "%w %h", file] ""
     case read <$> words output of
-        [x, y] -> return (x, y)
+        [w, h] -> return (w, h)
         _ -> throw $ PatternMatchFail $ "Claw.Image.getSize: Failed to parse image dimensions of file " ++ file
+
+{- | Reduce the smallest dimension to <= x, keeping the aspect ratio.
+Useful when resizing large, very non-square images, where clamping the larger dimension
+could result in an unreasonably small smaller dimension.
+-}
+clampSmaller :: Int -> (Int, Int) -> (Int, Int)
+clampSmaller x (w, h) =
+    let scale = min 1 $ fromIntegral x / fromIntegral (min w h) :: Double
+     in mapBoth (mulRII scale) (w, h)
+
+{- | Convert to jpg, and reduce the smallest axis to <= maxDim.
+Keeps aspect ratio and estimated quality.
+-}
+smallerJpg :: Int -> FilePath -> FilePath -> IO FilePath
+smallerJpg maxDim dst_dir src_file = do
+    newDims <- clampSmaller maxDim <$> getSize src_file
+    convert newDims 0 "jpg" dst_dir src_file
