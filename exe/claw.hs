@@ -26,5 +26,5 @@ main = do
           "--ghc-options",
           "-ghci-script \"" ++ init_script ++ "\"", -- Run this script at repl startup.
           "--ghc-options",
-          "-interactive-print=Claw.Utils.PrettyPrint.pprint" -- Function to use for printing values
+          "-interactive-print=Claw.Internal.PrettyPrint.pprint" -- Function to use for printing values
         ]
