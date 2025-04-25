@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-## Install claw library
+## Install claw library so it may be used by other packages.
 # Create local repo directory if it doesn't already exist
 REPO="$HOME/.cabal/lepository"
 mkdir -p -- "$REPO"
@@ -12,7 +12,7 @@ rm -- "$REPO/noindex.cache"
 # Update/refresh cabal (unsure if required)
 # cabal update
 
-## Install claw executable
+## Install claw executable so it can be invoked from the terminal with 'claw'
 # Create claw's config directory if it doesn't already exist
 CONFIG="$HOME/.config/claw"
 mkdir -p -- "$CONFIG"
