@@ -1,5 +1,5 @@
 module Claw.Video (
-    -- | Video conversion utilities. Requires @ffmpeg@ and @ffprobe@.
+    -- | Video editing and conversion utilities. Requires @ffmpeg@ and @ffprobe@.
     getSubtitles,
     probe,
     cut,
