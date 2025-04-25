@@ -1,3 +1,7 @@
+# About
+
+Ad-hoc library to use Haskell as a shell replacement, with convenience functions for common tasks.
+
 # Installation
 
 Create [local repository][https://cabal.readthedocs.io/en/stable/config.html#local-no-index-repositories]:
