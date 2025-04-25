@@ -8,6 +8,7 @@ main :: IO ()
 main = do
     home <- getHomeDirectory
     let init_script = home </> ".config/claw/init.ghci"
+    -- Unlike `ghci`, `cabal repl` will automatically load packages that claw depends on.
     callProcess "cabal" [
         -- https://cabal.readthedocs.io/en/stable/cabal-commands.html#cabal-repl
         "repl",

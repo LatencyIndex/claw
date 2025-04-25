@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-## Install claw library so it may be used by other packages.
+## Install claw library as a local package, so it may be used by other packages.
 # Create local repo directory if it doesn't already exist
 REPO="$HOME/.cabal/lepository"
 mkdir -p -- "$REPO"
