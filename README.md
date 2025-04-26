@@ -1,8 +1,8 @@
-# About
+# Claw
 
 Ad-hoc library to use Haskell as a shell replacement, with convenience functions for common tasks. In a pre-alpha state, updated sporadically. However, it should be perfectly usable, since it's only a library on top of the Haskell REPL.
 
-# Installation
+## Installation
 
 Create a [local repository](https://cabal.readthedocs.io/en/stable/config.html#local-no-index-repositories) (named `lepository` in this example):
 
@@ -21,7 +21,7 @@ To use the `claw` library in a project, specify it as a dependency in `yourproje
 
     build-depends: claw
 
-# Cleanup
+## Cleanup
 
 Old packages accumulate in `~/.cabal`. Clean them up by deleting old files/directories in
 
@@ -31,7 +31,7 @@ Old packages accumulate in `~/.cabal`. Clean them up by deleting old files/direc
     ~/.cabal/store/ghc-X.Y.Z/package.db
 Or delete all of `~/.cabal/store` and `~/.cabal/logs`, but that means all packages still in use will have to be downloaded and rebuilt.
 
-# Alternatives
+## Alternatives
 
 - https://hackage.haskell.org/package/shelly
 - https://hackage.haskell.org/package/shell-conduit
