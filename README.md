@@ -4,6 +4,9 @@ Ad-hoc library to use Haskell as a shell replacement, with convenience functions
 
 ## Installation
 
+Install dependencies:
+
+    sudo dnf install trash-cli ffmpeg ImageMagick
 Create a [local repository](https://cabal.readthedocs.io/en/stable/config.html#local-no-index-repositories) (named `lepository` in this example):
 
     mkdir "$HOME/.cabal/lepository"
