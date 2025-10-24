@@ -19,7 +19,9 @@ import Claw.FS.Path
 import Claw.Internal.List (align, padL, padR)
 import Claw.Internal.PrettyPrint (Pretty, pprint)
 import Claw.Time (UTCTime, getCurrentTimeZone, showTime, utcToZonedTime)
+import Control.Exception (SomeException, try)
 import Control.Monad.Extra (findM)
+import Data.Either (fromRight, rights)
 import Data.Functor ((<&>))
 import Data.List (sort, transpose)
 import Data.Ord (comparing)
@@ -100,13 +102,13 @@ instance Pretty [Metadata] where
             rows = transpose cols
         putStr $ unlines $ unwords <$> rows
 
--- | Throws exception if file does not exist.
-getMetadata :: FilePath -> IO Metadata
-getMetadata file = do
-    status <- P.getFileStatus file -- Throws exception if file does not exist.
-    return
+getMetadata :: FilePath -> IO (Either SomeException Metadata)
+getMetadata filepath = try (P.getFileStatus filepath) <&> fmap mkMetadata
+  where
+    mkMetadata :: P.FileStatus -> Metadata
+    mkMetadata status =
         Metadata
-            { name = getFileName file,
+            { name = getFileName filepath,
               size = fromIntegral $ P.fileSize status,
               modified = posixSecondsToUTCTime $ realToFrac $ P.modificationTime status,
               is_regular_file = P.isRegularFile status,
@@ -121,19 +123,23 @@ ls = pwd >>= D.listDirectory
 
 -- | Names of all entries in the given directory, without the special entries @.@ and @..@
 -- Entries given relative to the same directory that dir is relative to.
+-- If filepath does not exist returns the empty list.
 lsdir :: FilePath -> IO [FilePath]
-lsdir dir = D.listDirectory dir <&> fmap (dir </>)
+lsdir dir = files <&> fmap (dir </>) . fromRight []
+  where
+    files = try (D.listDirectory dir) :: IO (Either SomeException [FilePath])
 
 -- | All entries in the working directory, without the special entries @.@ and @..@
 -- Entries are sorted with directories first, then by file type, then by name.
 ll :: IO [Metadata]
-ll = ls >>= mapM getMetadata <&> sort
+ll = ls >>= mapM getMetadata <&> (sort . rights)
 
 -- | Obtain the current working directory as an absolute path.
 pwd :: IO FilePath
 pwd = D.getCurrentDirectory
 
 -- | Change the working directory to the given path.
+-- Throws if directory does not exist.
 cd :: FilePath -> IO ()
 cd = D.setCurrentDirectory
 
