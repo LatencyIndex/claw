@@ -10,7 +10,7 @@ cabal sdist --output-directory "$REPO"
 # Clear now-stale repository cache
 rm -- "$REPO/noindex.cache"
 # Update/refresh cabal (unsure if required)
-# cabal update
+cabal update
 
 ## Install claw executable so it can be invoked from the terminal with 'claw'
 # Create claw's config directory if it doesn't already exist
