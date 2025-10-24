@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module Claw.FS.Read (
-    INode (..),
+    Metadata (..),
     cd,
-    getINode,
+    getMetadata,
     ll,
     ls,
     lsdir,
@@ -45,7 +45,7 @@ inXBytes n = (ratio, prefix)
     ratio = fromIntegral n / fromIntegral unit :: Float
 
 -- | A filesystem entry, like a directory, file, link, block device, etc.
-data INode = INode
+data Metadata = Metadata
     { -- | Only the name itself, without the path.
       name :: String,
       size :: Int,
@@ -56,31 +56,31 @@ data INode = INode
     }
     deriving (Eq, Show)
 
-instance Ord INode where
+instance Ord Metadata where
     compare = comparing (not . is_dir) <> comparing (getExt . name) <> comparing name
 
-instance Pretty INode where
+instance Pretty Metadata where
     pprint x = pprint [x]
-instance Pretty [INode] where
+instance Pretty [Metadata] where
     pprint xs = do
         timezone <- getCurrentTimeZone
         let
-            modCell :: INode -> String
+            modCell :: Metadata -> String
             modCell = showTime . utcToZonedTime timezone . modified
-            sizeCell :: INode -> (String, String)
+            sizeCell :: Metadata -> (String, String)
             sizeCell x
                 | is_regular_file x = (showFFloat (Just 2) qty "", unit)
                 | otherwise = ("", "")
               where
                 (qty, unit) = inXBytes (size x)
-            dirCell :: INode -> String
+            dirCell :: Metadata -> String
             dirCell x
                 | is_regular_file x = "file"
                 | is_dir x = "dir"
                 | otherwise = "?"
-            linkCell :: INode -> String
+            linkCell :: Metadata -> String
             linkCell x = if is_symlink x then "symlink" else ""
-            extCell :: INode -> String
+            extCell :: Metadata -> String
             extCell x = if is_regular_file x then getExt (name x) else ""
             alignR :: [String] -> [String]
             alignR = align (padL ' ')
@@ -101,11 +101,11 @@ instance Pretty [INode] where
         putStr $ unlines $ unwords <$> rows
 
 -- | Throws exception if file does not exist.
-getINode :: FilePath -> IO INode
-getINode file = do
+getMetadata :: FilePath -> IO Metadata
+getMetadata file = do
     status <- P.getFileStatus file -- Throws exception if file does not exist.
     return
-        INode
+        Metadata
             { name = getFileName file,
               size = fromIntegral $ P.fileSize status,
               modified = posixSecondsToUTCTime $ realToFrac $ P.modificationTime status,
@@ -126,8 +126,8 @@ lsdir dir = D.listDirectory dir <&> fmap (dir </>)
 
 -- | All entries in the working directory, without the special entries @.@ and @..@
 -- Entries are sorted with directories first, then by file type, then by name.
-ll :: IO [INode]
-ll = ls >>= mapM getINode <&> sort
+ll :: IO [Metadata]
+ll = ls >>= mapM getMetadata <&> sort
 
 -- | Obtain the current working directory as an absolute path.
 pwd :: IO FilePath
