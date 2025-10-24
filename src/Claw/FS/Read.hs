@@ -1,33 +1,32 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Claw.FileSystem (
+module Claw.FS.Read (
     INode (..),
     cd,
     getINode,
     ll,
     ls,
     lsdir,
-    modifyFile,
     pwd,
-    renameFile,
-    trash,
-    cp,
+    makeUnique,
+    doesFileExist,
+    doesPathExist,
+    doesDirectoryExist,
+    getFileSize,
 ) where
 
-import Claw.FilePath
+import Claw.FS.Path
 import Claw.Internal.List (align, padL, padR)
 import Claw.Internal.PrettyPrint (Pretty, pprint)
 import Claw.Time (UTCTime, getCurrentTimeZone, showTime, utcToZonedTime)
+import Control.Monad.Extra (findM)
 import Data.Functor ((<&>))
 import Data.List (sort, transpose)
 import Data.Ord (comparing)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Numeric (showFFloat)
-import System.Directory (renameFile)
-import System.Process (callProcess)
+import System.Directory (doesDirectoryExist, doesFileExist, doesPathExist, getFileSize)
 import qualified System.Directory as D
-import qualified System.FilePath as F
-import qualified System.IO as I
 import qualified System.Posix.Files as P
 
 -- | Express the size of data in the most appropriate unit of bytes, as a (quantity, unit) pair.
@@ -101,9 +100,10 @@ instance Pretty [INode] where
             rows = transpose cols
         putStr $ unlines $ unwords <$> rows
 
+-- | Throws exception if file does not exist.
 getINode :: FilePath -> IO INode
 getINode file = do
-    status <- P.getFileStatus file
+    status <- P.getFileStatus file -- Throws exception if file does not exist.
     return
         INode
             { name = getFileName file,
@@ -115,12 +115,12 @@ getINode file = do
             }
 
 -- | Names of all entries in the working directory, without the special entries @.@ and @..@
--- Entires given relative to the working directory, i.e. only their filenames are returned.
+-- Entries given relative to the working directory, i.e. only their filenames are returned.
 ls :: IO [FilePath]
 ls = pwd >>= D.listDirectory
 
 -- | Names of all entries in the given directory, without the special entries @.@ and @..@
--- Entires given relative to the same directory that dir is relative to.
+-- Entries given relative to the same directory that dir is relative to.
 lsdir :: FilePath -> IO [FilePath]
 lsdir dir = D.listDirectory dir <&> fmap (dir </>)
 
@@ -137,29 +137,15 @@ pwd = D.getCurrentDirectory
 cd :: FilePath -> IO ()
 cd = D.setCurrentDirectory
 
--- | Uses a temporary file to avoid data loss.
-modifyFile :: (String -> String) -> FilePath -> IO ()
-modifyFile f file = do
-    -- Make a temporary file
-    let dir = getDir file
-        fname = getFileName file
-    (tempName, tempHandle) <- I.openTempFile dir (fname F.<.> "clawtmp")
-    -- Read target file contents
-    handle <- I.openFile file I.ReadMode
-    contents <- I.hGetContents handle
-    -- Write modified contents to temp file
-    let newContents = f contents
-    I.hPutStr tempHandle newContents
-    -- Close both files
-    I.hClose handle
-    I.hClose tempHandle
-    -- Replace original file with modified version
-    D.removeFile file
-    D.renameFile tempName file
-
--- | Move file or directory to trash.
-trash :: FilePath -> IO ()
-trash path = callProcess "trash" [path]
-
-cp :: FilePath -> FilePath -> IO ()
-cp = D.copyFile
+-- | Appends numbers to the end of the filename until it is unique.
+-- | E.g. given "file.jpg", it will try "file.jpg", "file0.jpg", "file1.jpg",..
+makeUnique :: FilePath -> IO (Maybe FilePath)
+makeUnique file =
+    let
+        prefix = getDir file </> getBaseName file
+        suffixes = "" : (show <$> [0 :: Int .. 999])
+        ext = getExt file
+        candidates :: [FilePath]
+        candidates = (\suffix -> prefix ++ suffix <.> ext) <$> suffixes
+     in
+        findM (fmap not . doesPathExist) candidates

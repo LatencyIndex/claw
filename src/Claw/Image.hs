@@ -1,5 +1,5 @@
+-- | Image conversion utilities. Requires imagemagick.
 module Claw.Image (
-    -- | Image conversion utilities. Requires imagemagick.
     convert,
     getSize,
     toJpg,
@@ -8,23 +8,22 @@ module Claw.Image (
 ) where
 
 import Claw.Control (mapBoth)
-import Claw.FilePath (getBaseName, getExt, hasExt, (<.>), (</>))
-import Claw.FileSystem (lsdir)
+import Claw.FS.Path (getBaseName, getExt, hasExt, (<.>), (</>))
+import Claw.FS.Read (lsdir)
 import Claw.Internal.Numeric (mulRII)
 import Control.Exception (PatternMatchFail (..), throw)
 import System.Process (callProcess, readProcess)
 
--- | Convert image to given format, resolution, and quality.
+-- | Convert image to given format (derived from file extension), resolution, and quality.
 -- Preserves aspect ratio if either x or y are 0. If both are 0, no resizing happens.
 -- Quality is on 1-100 scale, where 100 is best. Use 0 to keep estimated image quality.
 --     Chroma channels are not subsampled at quality >= 90
 --     Details: http://www.imagemagick.org/script/command-line-options.php#quality
 -- Format is determined by extension. Empty string keeps current format.
--- Returns the destination filepath.
-convert :: (Int, Int) -> Int -> String -> FilePath -> FilePath -> IO FilePath
-convert (w, h) quality ext dst_dir src_file =
-    let newExt = if null ext then getExt src_file else ext
-        dst_file = dst_dir </> getBaseName src_file <.> newExt
+-- Warning: Overwrites dst_file if it already exists. Even if it is the same as src_file.
+convert :: (Int, Int) -> Int -> FilePath -> FilePath -> IO ()
+convert (w, h) quality src_file dst_file =
+    let
         doResize = w > 0 || h > 0
         doQuality = 0 < quality
         toResizeArg :: Int -> String
@@ -33,9 +32,15 @@ convert (w, h) quality ext dst_dir src_file =
             | otherwise = ""
         resizeArgs = if doResize then ["-resize", toResizeArg w ++ "x" ++ toResizeArg h] else []
         qualityArgs = if doQuality then ["-quality", show quality] else []
-     in do
+     in
+        do
             callProcess "magick" ([src_file] ++ resizeArgs ++ qualityArgs ++ [dst_file])
-            return dst_file
+
+-- | Filename if it had the given extension in the given directory.
+getDstFile :: String -> FilePath -> FilePath -> FilePath
+getDstFile ext dst_dir src_file =
+    let newExt = if null ext then getExt src_file else ext
+     in dst_dir </> getBaseName src_file <.> newExt
 
 -- | Return the image size as (width, height). Throws on failure.
 getSize :: FilePath -> IO (Int, Int)
@@ -54,14 +59,14 @@ clampSmaller x (w, h) =
      in mapBoth (mulRII scale) (w, h)
 
 -- | Convert to 90 quality jpg. Arguments are dst_dir and src_file.
-toJpg :: FilePath -> FilePath -> IO FilePath
-toJpg = convert (0, 0) 90 "jpg"
+toJpg :: FilePath -> FilePath -> IO ()
+toJpg dst_dir src_file = convert (0, 0) 90 src_file (getDstFile "jpg" dst_dir src_file)
 
--- | Convert to 90 quality jpg, and resize so smallest axis <= maxDim, preserving aspect ratio.
-smallerJpg :: Int -> FilePath -> FilePath -> IO FilePath
-smallerJpg maxDim dstDir srcFile = do
-    newDims <- clampSmaller maxDim <$> getSize srcFile
-    convert newDims 90 "jpg" dstDir srcFile
+-- | Convert to 90 quality jpg, and resize so smallest axis <= max_dim, preserving aspect ratio.
+smallerJpg :: Int -> FilePath -> FilePath -> IO ()
+smallerJpg max_dim dst_dir src_file = do
+    new_dims <- clampSmaller max_dim <$> getSize src_file
+    convert new_dims 90 src_file (getDstFile "jpg" dst_dir src_file)
 
 -- | Convert all files with the specified extension in srcDir to reduced-size jpgs in dstDir.
 smallerJpgs :: String -> Int -> FilePath -> FilePath -> IO ()

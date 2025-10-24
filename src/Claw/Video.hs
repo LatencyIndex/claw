@@ -1,5 +1,5 @@
+-- | Video editing and conversion utilities. Requires @ffmpeg@ and @ffprobe@.
 module Claw.Video (
-    -- | Video editing and conversion utilities. Requires @ffmpeg@ and @ffprobe@.
     getSubtitles,
     probe,
     cut,
@@ -8,7 +8,7 @@ module Claw.Video (
     reencodeMany,
 ) where
 
-import Claw.FilePath
+import Claw.FS.Path
 import Claw.Time (Duration, showDuration)
 import System.Directory (removeFile)
 import System.IO (openTempFile, hPutStr, hClose)

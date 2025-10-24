@@ -23,13 +23,15 @@ library
     exposed-modules:
         Claw.Audio
         Claw.Control
-        Claw.FilePath
-        Claw.FileSystem
+        Claw.FS
+        Claw.FS.Path
+        Claw.FS.Read
+        Claw.FS.Write
         Claw.Image
-        Claw.Time
         Claw.Internal.List
         Claw.Internal.Numeric
         Claw.Internal.PrettyPrint
+        Claw.Time
         Claw.Video
     other-modules:
     default-extensions:
@@ -39,6 +41,7 @@ library
     build-depends:
         base,
         directory,
+        extra,
         filepath,
         process,
         time,

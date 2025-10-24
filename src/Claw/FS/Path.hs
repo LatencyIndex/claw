@@ -1,4 +1,4 @@
-module Claw.FilePath (
+module Claw.FS.Path (
     (<.>),
     (</>),
     getBaseName,
