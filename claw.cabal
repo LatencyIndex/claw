@@ -22,7 +22,6 @@ library
     import: shared-properties
     exposed-modules:
         Claw.Audio
-        Claw.Control
         Claw.FS
         Claw.FS.Path
         Claw.FS.Read
@@ -31,6 +30,7 @@ library
         Claw.Internal.List
         Claw.Internal.Numeric
         Claw.Internal.PrettyPrint
+        Claw.Prelude
         Claw.Time
         Claw.Video
     other-modules:
