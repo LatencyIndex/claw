@@ -144,7 +144,8 @@ cd :: FilePath -> IO ()
 cd = D.setCurrentDirectory
 
 -- | Appends numbers to the end of the filename until it is unique.
--- | E.g. given "file.jpg", it will try "file.jpg", "file0.jpg", "file1.jpg",..
+-- E.g. given "file.jpg", it will try "file.jpg", "file0.jpg", "file1.jpg",..
+-- up to "file999.jpg"
 makeUnique :: FilePath -> IO (Maybe FilePath)
 makeUnique file =
     let
