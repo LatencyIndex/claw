@@ -7,11 +7,11 @@ module Claw.Image (
     smallerJpgs,
 ) where
 
-import Claw.Control (mapBoth)
 import Claw.FS.Path (getBaseName, getExt, hasExt, (<.>), (</>))
 import Claw.FS.Read (lsdir)
 import Claw.Internal.Numeric (mulRII)
 import Control.Exception (PatternMatchFail (..), throw)
+import Data.Tuple.Extra (both)
 import System.Process (callProcess, readProcess)
 
 -- | Convert image to given format (derived from file extension), resolution, and quality.
@@ -56,7 +56,7 @@ getSize file = do
 clampSmaller :: Int -> (Int, Int) -> (Int, Int)
 clampSmaller x (w, h) =
     let scale = min 1 $ fromIntegral x / fromIntegral (min w h) :: Double
-     in mapBoth (mulRII scale) (w, h)
+     in both (mulRII scale) (w, h)
 
 -- | Convert to 90 quality jpg. Arguments are dst_dir and src_file.
 toJpg :: FilePath -> FilePath -> IO ()
