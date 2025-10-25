@@ -6,6 +6,7 @@ module Claw.FS.Write (
 ) where
 
 import Claw.FS.Path
+import Control.Exception.Extra (ignore)
 import System.Directory (renameFile)
 import qualified System.Directory as D
 import qualified System.FilePath as F
@@ -33,8 +34,9 @@ modifyFile f file = do
     D.renameFile tempName file
 
 -- | Move file or directory to trash.
+-- Ignores exceptions, e.g. caused by invalid paths.
 trash :: FilePath -> IO ()
-trash path = callProcess "trash" [path]
+trash path = ignore $ callProcess "trash" [path]
 
 cp :: FilePath -> FilePath -> IO ()
 cp = D.copyFile
