@@ -20,14 +20,15 @@ import Claw.Internal.List (align, padL, padR)
 import Claw.Internal.PrettyPrint (Pretty, pprint)
 import Claw.Time (UTCTime, getCurrentTimeZone, showTime, utcToZonedTime)
 import Control.Exception (SomeException, try)
-import Control.Monad.Extra (findM)
+import Control.Exception.Extra (try_)
+import Control.Monad.Extra (findM, ifM)
 import Data.Either (fromRight, rights)
 import Data.Functor ((<&>))
 import Data.List (sort, transpose)
 import Data.Ord (comparing)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Numeric (showFFloat)
-import System.Directory (doesDirectoryExist, doesFileExist, doesPathExist, getFileSize)
+import System.Directory (doesDirectoryExist, doesFileExist, doesPathExist)
 import qualified System.Directory as D
 import qualified System.Posix.Files as P
 
@@ -125,9 +126,7 @@ ls = pwd >>= D.listDirectory
 -- Entries given relative to the same directory that dir is relative to.
 -- If filepath does not exist returns the empty list.
 lsdir :: FilePath -> IO [FilePath]
-lsdir dir = files <&> fmap (dir </>) . fromRight []
-  where
-    files = try (D.listDirectory dir) :: IO (Either SomeException [FilePath])
+lsdir dir = try_ (D.listDirectory dir) <&> fmap (dir </>) . fromRight []
 
 -- | All entries in the working directory, without the special entries @.@ and @..@
 -- Entries are sorted with directories first, then by file type, then by name.
@@ -142,6 +141,14 @@ pwd = D.getCurrentDirectory
 -- Throws if directory does not exist.
 cd :: FilePath -> IO ()
 cd = D.setCurrentDirectory
+
+-- | In bytes. 0 if path is not a file (e.g. a directory or invalid).
+getFileSize :: FilePath -> IO Integer
+getFileSize file = ifM (doesFileExist file) fileSize (return 0)
+  where
+    -- Return 0 on exception instead of throwing.
+    fileSize :: IO Integer
+    fileSize = fromRight 0 <$> try_ (D.getFileSize file)
 
 -- | Appends numbers to the end of the filename until it is unique.
 -- E.g. given "file.jpg", it will try "file.jpg", "file0.jpg", "file1.jpg",..
