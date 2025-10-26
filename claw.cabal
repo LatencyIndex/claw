@@ -27,6 +27,7 @@ library
         Claw.FS.Read
         Claw.FS.Write
         Claw.Image
+        Claw.Internal.Conversion
         Claw.Internal.List
         Claw.Internal.Numeric
         Claw.Internal.PrettyPrint
