@@ -26,6 +26,7 @@ convert (w, h) quality = convertSafely (convertUnsafe (w, h) quality)
 
 -- Same as convert, but without checking if src and dst are the same or already exist.
 -- Warning: Overwrites dst_file if it already exists, even if it is the same as src_file.
+-- Warning: May throw exception, e.g. for invalid paths.
 convertUnsafe :: (Int, Int) -> Int -> FilePath -> FilePath -> IO ()
 convertUnsafe (w, h) quality src dst =
     let
@@ -40,11 +41,13 @@ convertUnsafe (w, h) quality src dst =
      in
         callProcess "magick" ([src] ++ resizeArgs ++ qualityArgs ++ [dst])
 
+-- | Warning: May throw exception, e.g. for invalid paths.
 countFrames :: FilePath -> IO Int
 -- 'identify' is part of imagemagick. Can also be invoked as 'magick identify'.
 countFrames file = length . lines <$> readProcess "identify" [file] ""
 
 -- | Return the image size as (width, height). Throws on failure.
+-- Warning: May throw exception, e.g. for invalid paths.
 getSize :: FilePath -> IO (Int, Int)
 getSize file = do
     output <- readProcess "identify" ["-ping", "-format", "%w %h", file] ""
