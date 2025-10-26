@@ -3,3 +3,4 @@
 comma-style: trailing
 haddock-style: single-line
 haddock-style-module: single-line
+if-style: hanging
