@@ -22,7 +22,6 @@ library
     import: shared-properties
     exposed-modules:
         Claw.Audio
-        Claw.FS
         Claw.FS.Path
         Claw.FS.Read
         Claw.FS.Write

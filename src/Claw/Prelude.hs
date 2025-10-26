@@ -3,7 +3,9 @@
 -- I.e. it is not possible in module A to re-export B.C.f so that it could be accessed as A.C.f
 -- So those parts of the prelude that we want to remain nested are imported in init.ghci
 module Claw.Prelude (
-    module Claw.FS,
+    module Claw.FS.Path,
+    module Claw.FS.Read,
+    module Claw.FS.Write,
     module Claw.Time,
     (&),
     (<&>),
@@ -21,5 +23,7 @@ import Data.Functor ((<&>))
 import Data.List (isPrefixOf, isSuffixOf, sort, sortOn)
 import Data.Tuple.Extra (both)
 
-import Claw.FS
+import Claw.FS.Path
+import Claw.FS.Read
+import Claw.FS.Write
 import Claw.Time
