@@ -8,7 +8,7 @@ module Claw.FS.Read (
     ls,
     lsdir,
     pwd,
-    makeUnique,
+    findUnique,
     doesFileExist,
     doesPathExist,
     doesDirectoryExist,
@@ -153,8 +153,8 @@ getFileSize file = ifM (doesFileExist file) fileSize (return 0)
 -- | Appends numbers to the end of the filename until it is unique.
 -- E.g. given "file.jpg", it will try "file.jpg", "file0.jpg", "file1.jpg",..
 -- up to "file999.jpg"
-makeUnique :: FilePath -> IO (Maybe FilePath)
-makeUnique file =
+findUnique :: FilePath -> IO (Maybe FilePath)
+findUnique file =
     let
         prefix = getDir file </> getBaseName file
         suffixes = "" : (show <$> [0 :: Int .. 999])
