@@ -1,6 +1,7 @@
 -- | Image conversion utilities. Requires imagemagick.
 module Claw.Image (
     convert,
+    countFrames,
     getSize,
     toWebpInPlace,
 ) where
@@ -38,6 +39,10 @@ convertUnsafe (w, h) quality src dst =
         qualityArgs = if doQuality then ["-quality", show quality] else []
      in
         callProcess "magick" ([src] ++ resizeArgs ++ qualityArgs ++ [dst])
+
+countFrames :: FilePath -> IO Int
+-- 'identify' is part of imagemagick. Can also be invoked as 'magick identify'.
+countFrames file = length . lines <$> readProcess "identify" [file] ""
 
 -- | Return the image size as (width, height). Throws on failure.
 getSize :: FilePath -> IO (Int, Int)
