@@ -20,7 +20,7 @@ import System.Process (callProcess, readProcess)
 --     Chroma channels are not subsampled at quality >= 90
 --     Details: http://www.imagemagick.org/script/command-line-options.php#quality
 -- Format is determined by extension. Empty string keeps current format.
--- Returns true if conversion was successful.
+-- If the conversion was successful (i.e. a new file was created), returns the path to the new file.
 convert :: (Int, Int) -> Int -> FilePath -> FilePath -> IO (Maybe FilePath)
 convert (w, h) quality = convertSafely (convertUnsafe (w, h) quality)
 
