@@ -53,7 +53,9 @@ data Metadata = Metadata
       name :: String,
       size :: Int,
       modified :: UTCTime,
+      -- | False for directories and symlinks.
       is_regular_file :: Bool,
+      -- | False for symlinks to directories.
       is_dir :: Bool,
       is_symlink :: Bool
     }
@@ -103,8 +105,9 @@ instance Pretty [Metadata] where
             rows = transpose cols
         putStr $ unlines $ unwords <$> rows
 
+-- | Warning: For information about a directory itself, use @dirname@, not @dirname/@
 getMetadata :: FilePath -> IO (Either SomeException Metadata)
-getMetadata filepath = try (P.getFileStatus filepath) <&> fmap mkMetadata
+getMetadata filepath = try (P.getSymbolicLinkStatus filepath) <&> fmap mkMetadata
   where
     mkMetadata :: P.FileStatus -> Metadata
     mkMetadata status =
@@ -151,8 +154,7 @@ getFileSize file = ifM (doesFileExist file) fileSize (return 0)
     fileSize = fromRight 0 <$> try_ (D.getFileSize file)
 
 -- | Appends numbers to the end of the filename until it is unique.
--- E.g. given "file.jpg", it will try "file.jpg", "file0.jpg", "file1.jpg",..
--- up to "file999.jpg"
+-- E.g. given @file.jpg@, it will try @file.jpg@, @file0.jpg@, @file1.jpg@,.. up to @file999.jpg@
 findUnique :: FilePath -> IO (Maybe FilePath)
 findUnique file =
     let
