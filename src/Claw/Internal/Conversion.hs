@@ -1,5 +1,5 @@
 module Claw.Internal.Conversion (
-    convertInPlace,
+    convertDestructive,
     convertSafely,
 ) where
 
@@ -12,12 +12,12 @@ import Data.Functor ((<&>))
 --      conversionFn: takes the original file, and returns the converted file. Must conform to convertSafely behavior.
 --      findObsolteFn: takes the original and converted file, and returns the one that should be discarded
 --      original: file to be converted
-convertInPlace ::
+convertDestructive ::
     (FilePath -> IO (Maybe FilePath)) ->
     (FilePath -> FilePath -> IO FilePath) ->
     FilePath ->
     IO ()
-convertInPlace conversionFn findObsoleteFn original = do
+convertDestructive conversionFn findObsoleteFn original = do
     mconverted <- conversionFn original
     case mconverted of
         Nothing -> return ()

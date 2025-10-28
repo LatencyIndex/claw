@@ -3,12 +3,12 @@ module Claw.Image (
     convert,
     countFrames,
     getSize,
-    toWebpInPlace,
+    toWebpDestructive,
 ) where
 
 import Claw.FS.Path (getExt, replaceExt)
 import Claw.FS.Read (findUnique, getFileSize)
-import Claw.Internal.Conversion (convertInPlace, convertSafely)
+import Claw.Internal.Conversion (convertDestructive, convertSafely)
 import Claw.Internal.Numeric (mulRII)
 import Claw.Internal.Process (callProcessSafe, readProcessSafe)
 import Data.Maybe (mapMaybe)
@@ -91,5 +91,5 @@ toWebp src = do
         Just dst -> convert (0, 0) 90 src dst
 
 -- | Convert to .webp, deleting the original image on success.
-toWebpInPlace :: FilePath -> IO ()
-toWebpInPlace = convertInPlace toWebp obsoleteImage
+toWebpDestructive :: FilePath -> IO ()
+toWebpDestructive = convertDestructive toWebp obsoleteImage
