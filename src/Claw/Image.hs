@@ -62,25 +62,23 @@ _clampSmaller x (w, h) =
     let scale = min 1 $ fromIntegral x / fromIntegral (min w h) :: Double
      in both (mulRII scale) (w, h)
 
--- Given an original image and its converted version, returns which can be discarded.
+-- Given an original image and its converted version, returns which, if any, can be discarded.
 -- Assumes both paths point to existing files (and not directories).
 obsoleteImage :: FilePath -> FilePath -> IO FilePath
 obsoleteImage original converted = do
-    orig_size <- getFileSize original
-    conv_size <- getFileSize converted
-    let
-        -- Minimal savings required to prefer the converted image.
-        threshold = case getExt original of
-            ".png" -> 0.75 -- png is lossless so harder to justify replacing it.
-            _ -> 0.9 :: Float
-        small_enough = fromInteger conv_size <= threshold * fromInteger orig_size :: Bool
-        -- If converted is less than 1kB, something probably went wrong.
-        big_enough = 1024 < conv_size
-    if small_enough && big_enough
-        then
-            return original
-        else
-            return converted
+    m_orig_size <- getFileSize original
+    m_conv_size <- getFileSize converted
+    return $ case (m_orig_size, m_conv_size) of
+        (Just orig_size, Just conv_size) -> if small_enough && big_enough then original else converted
+          where
+            -- Minimal savings required to prefer the converted image.
+            threshold = case getExt original of
+                ".png" -> 0.5 -- png is lossless so harder to justify replacing it.
+                _ -> 0.9 :: Float
+            small_enough = fromInteger conv_size <= threshold * fromInteger orig_size :: Bool
+            -- If converted is less than 1kB, something probably went wrong.
+            big_enough = 1024 < conv_size
+        _ -> original
 
 -- | Convert to 90 quality .webp, returning the path to the converted image on success.
 toWebp :: FilePath -> IO (Maybe FilePath)

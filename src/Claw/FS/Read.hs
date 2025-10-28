@@ -24,6 +24,7 @@ import Control.Exception (SomeException, try)
 import Control.Exception.Extra (try_)
 import Control.Monad.Extra (findM, ifM)
 import Data.Either (fromRight, rights)
+import Data.Either.Extra (eitherToMaybe)
 import Data.Functor ((<&>))
 import Data.List (sort, transpose)
 import Data.Ord (comparing)
@@ -154,13 +155,13 @@ isRegularFile path = do
         Left _ -> False
         Right metadata -> is_regular_file metadata
 
--- | In bytes. 0 if path is not a file (e.g. a directory or invalid).
-getFileSize :: FilePath -> IO Integer
-getFileSize file = ifM (doesFileExist file) fileSize (return 0)
+-- | In bytes. @Nothing@ if path is not a regular file.
+getFileSize :: FilePath -> IO (Maybe Integer)
+getFileSize file = ifM (isRegularFile file) fileSize (return Nothing)
   where
-    -- Return 0 on exception instead of throwing.
-    fileSize :: IO Integer
-    fileSize = fromRight 0 <$> try_ (D.getFileSize file)
+    -- Get file size without throwing exception.
+    fileSize :: IO (Maybe Integer)
+    fileSize = eitherToMaybe <$> try_ (D.getFileSize file)
 
 -- | Appends numbers to the end of the filename until it is unique.
 -- E.g. given @file.jpg@, it will try @file.jpg@, @file0.jpg@, @file1.jpg@,.. up to @file999.jpg@
