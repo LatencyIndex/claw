@@ -5,3 +5,4 @@ import Claw.Prelude
 import qualified Claw.Audio as Audio
 import qualified Claw.Image as Image
 import qualified Claw.Video as Video
+import qualified Claw.Multimedia as Multimedia
