@@ -32,10 +32,10 @@ convertSafely :: (FilePath -> FilePath -> IO ()) -> FilePath -> FilePath -> IO (
 convertSafely convertFn src dst = do
     src_exists <- isRegularFile src
     dst_taken <- doesPathExist dst
-    if src == dst || not src_exists || dst_taken
-        then
-            return Nothing
-        else do
+    if src /= dst && src_exists && not dst_taken
+        then do
             -- Ignore all exceptions, such as caused by e.g. wrong filenames.
             ignore (convertFn src dst)
             doesPathExist dst <&> \exists -> if exists then Just dst else Nothing
+        else
+            return Nothing
