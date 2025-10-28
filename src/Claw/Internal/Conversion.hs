@@ -10,7 +10,7 @@ import Claw.FS.Write (trash)
 import Control.Exception.Extra (ignore)
 import Data.Functor ((<&>))
 
--- | Converts a file, and deletes the obsolete version. Arguments:
+-- | Converts a file, and trashes the obsolete version. Arguments:
 --      conversionFn: takes the original file, and returns the converted file. Must conform to convertSafely behavior.
 --      findObsolteFn: takes the original and converted file, and returns the one that should be discarded, if any
 --      original: file to be converted

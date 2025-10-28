@@ -77,6 +77,6 @@ toWebp src = do
         Nothing -> return Nothing -- No free filename found - give up.
         Just dst -> convert (0, 0) 90 src dst
 
--- | Convert to .webp, deleting the original image on success.
+-- | Convert to .webp, trashing the original image on success.
 toWebpDestructive :: FilePath -> IO ()
 toWebpDestructive = convertDestructive toWebp webpFindObsolete
