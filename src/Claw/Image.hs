@@ -72,7 +72,7 @@ findObsolete original converted = do
           where
             -- Minimal savings required to prefer the converted image.
             threshold = case getExt original of
-                ".png" -> 0.5 -- png is lossless so harder to justify replacing it.
+                ".png" -> 0.5 -- png is lossless, so harder to justify replacing it.
                 _ -> 0.9 :: Float
             small_enough = fromInteger conv_size <= threshold * fromInteger orig_size :: Bool
             -- If converted is less than 1kB, something probably went wrong.
