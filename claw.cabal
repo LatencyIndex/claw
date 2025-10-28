@@ -30,6 +30,7 @@ library
         Claw.Internal.List
         Claw.Internal.Numeric
         Claw.Internal.PrettyPrint
+        Claw.Internal.Process
         Claw.Prelude
         Claw.Time
         Claw.Video
