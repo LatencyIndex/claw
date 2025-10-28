@@ -4,9 +4,9 @@ module Claw.FS.Read (
     Metadata (..),
     cd,
     getMetadata,
-    ll,
-    ls,
     lsdir,
+    ls,
+    lsmeta,
     pwd,
     findUnique,
     doesFileExist,
@@ -122,21 +122,21 @@ getMetadata filepath = try (P.getSymbolicLinkStatus filepath) <&> fmap mkMetadat
               is_symlink = P.isSymbolicLink status
             }
 
--- | Names of all entries in the working directory, without the special entries @.@ and @..@
--- Entries given relative to the working directory, i.e. only their filenames are returned.
-ls :: IO [FilePath]
-ls = pwd >>= D.listDirectory
-
 -- | Names of all entries in the given directory, without the special entries @.@ and @..@
 -- Entries given relative to the same directory that dir is relative to.
 -- If filepath does not exist returns the empty list.
 lsdir :: FilePath -> IO [FilePath]
 lsdir dir = try_ (D.listDirectory dir) <&> fmap (dir </>) . fromRight []
 
+-- | Names of all entries in the working directory, without the special entries @.@ and @..@
+-- Entries given relative to the working directory, i.e. only their filenames are returned.
+ls :: IO [FilePath]
+ls = pwd >>= D.listDirectory
+
 -- | All entries in the working directory, without the special entries @.@ and @..@
 -- Entries are sorted with directories first, then by file type, then by name.
-ll :: IO [Metadata]
-ll = ls >>= mapM getMetadata <&> (sort . rights)
+lsmeta :: IO [Metadata]
+lsmeta = ls >>= mapM getMetadata <&> (sort . rights)
 
 -- | Obtain the current working directory as an absolute path.
 pwd :: IO FilePath
