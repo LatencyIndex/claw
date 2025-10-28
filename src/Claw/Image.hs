@@ -6,9 +6,9 @@ module Claw.Image (
     toWebpDestructive,
 ) where
 
-import Claw.FS.Path (getExt, replaceExt)
-import Claw.FS.Read (findUnique, getFileSize)
-import Claw.Internal.Conversion (convertDestructive, convertSafely)
+import Claw.FS.Path (replaceExt)
+import Claw.FS.Read (findUnique)
+import Claw.Internal.Conversion (convertDestructive, convertSafely, findObsoleteBySize)
 import Claw.Internal.Numeric (mulRII)
 import Claw.Internal.Process (callProcessSafe, readProcessSafe)
 import Data.Maybe (mapMaybe)
@@ -62,22 +62,15 @@ _clampSmaller x (w, h) =
     let scale = min 1 $ fromIntegral x / fromIntegral (min w h) :: Double
      in both (mulRII scale) (w, h)
 
--- Given an original image and its converted version, returns which, if any, can be discarded.
-findObsolete :: FilePath -> FilePath -> IO (Maybe FilePath)
-findObsolete original converted = do
-    m_orig_size <- getFileSize original
-    m_conv_size <- getFileSize converted
-    return $ case (m_orig_size, m_conv_size) of
-        (Just orig_size, Just conv_size) -> Just (if small_enough && big_enough then original else converted)
-          where
-            -- Minimal savings required to prefer the converted image.
-            threshold = case getExt original of
-                ".png" -> 0.5 -- png is lossless, so harder to justify replacing it.
-                _ -> 0.9 :: Float
-            small_enough = fromInteger conv_size <= threshold * fromInteger orig_size :: Bool
-            -- If converted is less than 1kB, something probably went wrong.
-            big_enough = 1024 < conv_size
-        _ -> Nothing
+webpMinSizeAbs :: Integer
+webpMinSizeAbs = 1024
+
+webpMaxSizeRel :: String -> Float
+webpMaxSizeRel ".png" = 0.5 -- png is lossless, so harder to justify replacing it.
+webpMaxSizeRel _ = 0.9
+
+webpFindObsolete :: FilePath -> FilePath -> IO (Maybe FilePath)
+webpFindObsolete = findObsoleteBySize webpMinSizeAbs webpMaxSizeRel
 
 -- | Convert to 90 quality .webp, returning the path to the converted image on success.
 toWebp :: FilePath -> IO (Maybe FilePath)
@@ -89,4 +82,4 @@ toWebp src = do
 
 -- | Convert to .webp, deleting the original image on success.
 toWebpDestructive :: FilePath -> IO ()
-toWebpDestructive = convertDestructive toWebp findObsolete
+toWebpDestructive = convertDestructive toWebp webpFindObsolete

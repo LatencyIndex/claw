@@ -1,9 +1,11 @@
+-- | Higher-order functions for file conversion.
 module Claw.Internal.Conversion (
     convertDestructive,
     convertSafely,
+    findObsoleteBySize,
 ) where
 
-import Claw.FS.Read (doesPathExist, isRegularFile)
+import Claw.FS.Read (doesPathExist, getFileSize, isRegularFile)
 import Claw.FS.Write (trash)
 import Control.Exception.Extra (ignore)
 import Data.Functor ((<&>))
@@ -42,3 +44,19 @@ convertSafely convertFn src dst = do
             doesPathExist dst <&> \exists -> if exists then Just dst else Nothing
         else
             return Nothing
+
+-- | Build a function to determine which of two files, original or converted, to discard. Arguments:
+--      minSizeAbs: converted files smaller than this many bytes are considered broken
+--      maxSizeRel: given the extension of the source file (e.g. @.jpg@), returns the maximum size of the converted file
+--                  relative to the original, before it is considered too big
+findObsoleteBySize :: Integer -> (String -> Float) -> FilePath -> FilePath -> IO (Maybe FilePath)
+findObsoleteBySize minSizeAbs maxSizeRel original converted = do
+    m_orig_size <- getFileSize original
+    m_conv_size <- getFileSize converted
+    return $ case (m_orig_size, m_conv_size) of
+        (Just orig_size, Just conv_size) -> Just (if small_enough && big_enough then original else converted)
+          where
+            max_size = maxSizeRel original * fromInteger orig_size
+            small_enough = fromInteger conv_size <= max_size
+            big_enough = minSizeAbs < conv_size
+        _ -> Nothing
