@@ -62,15 +62,12 @@ _clampSmaller x (w, h) =
     let scale = min 1 $ fromIntegral x / fromIntegral (min w h) :: Double
      in both (mulRII scale) (w, h)
 
-webpMinSizeAbs :: Integer
-webpMinSizeAbs = 1024
-
-webpMaxSizeRel :: String -> Float
-webpMaxSizeRel ".png" = 0.5 -- png is lossless, so harder to justify replacing it.
-webpMaxSizeRel _ = 0.9
-
 webpFindObsolete :: FilePath -> FilePath -> IO (Maybe FilePath)
-webpFindObsolete = findObsoleteBySize webpMinSizeAbs webpMaxSizeRel
+webpFindObsolete = findObsoleteBySize minSizeAbs maxSizeRel where
+    minSizeAbs = 2048 -- Images smaller than 2kB are probably broken.
+    maxSizeRel :: String -> Float
+    maxSizeRel ".png" = 0.5 -- png is lossless, so harder to justify replacing it.
+    maxSizeRel _ = 0.9
 
 -- | Convert to 90 quality .webp, returning the path to the converted image on success.
 toWebp :: FilePath -> IO (Maybe FilePath)
