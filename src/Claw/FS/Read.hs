@@ -12,6 +12,7 @@ module Claw.FS.Read (
     doesFileExist,
     doesPathExist,
     doesDirectoryExist,
+    isRegularFile,
     getFileSize,
 ) where
 
@@ -144,6 +145,14 @@ pwd = D.getCurrentDirectory
 -- Throws if directory does not exist.
 cd :: FilePath -> IO ()
 cd = D.setCurrentDirectory
+
+-- | File exists and is a regular file, not a directory or symlink.
+isRegularFile :: FilePath -> IO Bool
+isRegularFile path = do
+    e_mdata <- getMetadata path
+    return $ case e_mdata of
+        Left _ -> False
+        Right metadata -> is_regular_file metadata
 
 -- | In bytes. 0 if path is not a file (e.g. a directory or invalid).
 getFileSize :: FilePath -> IO Integer
