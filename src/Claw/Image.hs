@@ -10,9 +10,10 @@ import Claw.FS.Path (getExt, replaceExt)
 import Claw.FS.Read (findUnique, getFileSize)
 import Claw.Internal.Conversion (convertInPlace, convertSafely)
 import Claw.Internal.Numeric (mulRII)
-import Control.Exception (PatternMatchFail (..), throw)
+import Claw.Internal.Process (callProcessSafe, readProcessSafe)
+import Data.Maybe (mapMaybe)
 import Data.Tuple.Extra (both)
-import System.Process (callProcess, readProcess)
+import Text.Read (readMaybe)
 
 -- | Convert image to given format (derived from file extension), resolution, and quality.
 -- Preserves aspect ratio if either x or y are 0. If both are 0, no resizing happens.
@@ -26,7 +27,6 @@ convert (w, h) quality = convertSafely (convertUnsafe (w, h) quality)
 
 -- Same as convert, but without checking if src and dst are the same or already exist.
 -- Warning: Overwrites dst_file if it already exists, even if it is the same as src_file.
--- Warning: May throw exception, e.g. for invalid paths.
 convertUnsafe :: (Int, Int) -> Int -> FilePath -> FilePath -> IO ()
 convertUnsafe (w, h) quality src dst =
     let
@@ -39,21 +39,20 @@ convertUnsafe (w, h) quality src dst =
         resizeArgs = if doResize then ["-resize", toResizeArg w ++ "x" ++ toResizeArg h] else []
         qualityArgs = if doQuality then ["-quality", show quality] else []
      in
-        callProcess "magick" ([src] ++ resizeArgs ++ qualityArgs ++ [dst])
+        callProcessSafe "magick" ([src] ++ resizeArgs ++ qualityArgs ++ [dst])
 
--- | Warning: May throw exception, e.g. for invalid paths.
-countFrames :: FilePath -> IO Int
--- 'identify' is part of imagemagick. Can also be invoked as 'magick identify'.
-countFrames file = length . lines <$> readProcess "identify" [file] ""
+-- | Yields Nothing on failure.
+countFrames :: FilePath -> IO (Maybe Int)
+countFrames file = fmap (length . lines) <$> readProcessSafe "magick" ["identify", file] ""
 
--- | Return the image size as (width, height). Throws on failure.
--- Warning: May throw exception, e.g. for invalid paths.
-getSize :: FilePath -> IO (Int, Int)
-getSize file = do
-    output <- readProcess "identify" ["-ping", "-format", "%w %h", file] ""
-    case read <$> words output of
-        [w, h] -> return (w, h)
-        _ -> throw $ PatternMatchFail $ "Claw.Image.getSize: Failed to parse image dimensions of file " ++ file
+-- | Return the image size as (width, height). Yields Nothing on failure.
+getSize :: FilePath -> IO (Maybe (Int, Int))
+getSize file = (>>= parseSize) <$> readProcessSafe "magick" ["identify", "-ping", "-format", "%w %h", file] ""
+  where
+    parseSize :: String -> Maybe (Int, Int)
+    parseSize s = case mapMaybe readMaybe (words s) of
+        [w, h] -> Just (w, h)
+        _ -> Nothing
 
 -- | Reduce the smallest dimension to <= x, keeping the aspect ratio.
 -- Useful when resizing large, very non-square images, where clamping the larger dimension
