@@ -13,6 +13,7 @@ module Claw.FS.Read (
     doesPathExist,
     doesDirectoryExist,
     isRegularFile,
+    isSymlink,
     getFileSize,
 ) where
 
@@ -154,6 +155,12 @@ isRegularFile path = do
     return $ case e_mdata of
         Left _ -> False
         Right metadata -> is_regular_file metadata
+
+-- | Warning: if @dir_link@ is a symlink to a directory, then
+-- @isSymlink "dir_link" == True@
+-- @isSymlink "dir_link/" == False@
+isSymlink :: FilePath -> IO (Maybe Bool)
+isSymlink = fmap eitherToMaybe . try_ . D.pathIsSymbolicLink
 
 -- | In bytes. @Nothing@ if path is not a regular file.
 getFileSize :: FilePath -> IO (Maybe Integer)
