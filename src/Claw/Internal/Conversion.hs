@@ -10,18 +10,21 @@ import Data.Functor ((<&>))
 
 -- | Converts a file, and deletes the obsolete version. Arguments:
 --      conversionFn: takes the original file, and returns the converted file. Must conform to convertSafely behavior.
---      findObsolteFn: takes the original and converted file, and returns the one that should be discarded
+--      findObsolteFn: takes the original and converted file, and returns the one that should be discarded, if any
 --      original: file to be converted
 convertDestructive ::
     (FilePath -> IO (Maybe FilePath)) ->
-    (FilePath -> FilePath -> IO FilePath) ->
+    (FilePath -> FilePath -> IO (Maybe FilePath)) ->
     FilePath ->
     IO ()
 convertDestructive conversionFn findObsoleteFn original = do
     mconverted <- conversionFn original
     case mconverted of
         Nothing -> return ()
-        Just converted -> findObsoleteFn original converted >>= trash
+        Just converted -> findObsoleteFn original converted >>= trashMaybe
+
+trashMaybe :: Maybe FilePath -> IO ()
+trashMaybe = maybe (pure ()) trash
 
 -- | Given a conversion function that takes a src and dst path and tries to convert src to dst,
 -- yields a new conversion function, that checks that src is a regular file (not a directory or symlink),

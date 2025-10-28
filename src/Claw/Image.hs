@@ -63,13 +63,12 @@ _clampSmaller x (w, h) =
      in both (mulRII scale) (w, h)
 
 -- Given an original image and its converted version, returns which, if any, can be discarded.
--- Assumes both paths point to existing files (and not directories).
-obsoleteImage :: FilePath -> FilePath -> IO FilePath
+obsoleteImage :: FilePath -> FilePath -> IO (Maybe FilePath)
 obsoleteImage original converted = do
     m_orig_size <- getFileSize original
     m_conv_size <- getFileSize converted
     return $ case (m_orig_size, m_conv_size) of
-        (Just orig_size, Just conv_size) -> if small_enough && big_enough then original else converted
+        (Just orig_size, Just conv_size) -> Just (if small_enough && big_enough then original else converted)
           where
             -- Minimal savings required to prefer the converted image.
             threshold = case getExt original of
@@ -78,7 +77,7 @@ obsoleteImage original converted = do
             small_enough = fromInteger conv_size <= threshold * fromInteger orig_size :: Bool
             -- If converted is less than 1kB, something probably went wrong.
             big_enough = 1024 < conv_size
-        _ -> original
+        _ -> Nothing
 
 -- | Convert to 90 quality .webp, returning the path to the converted image on success.
 toWebp :: FilePath -> IO (Maybe FilePath)
