@@ -3,7 +3,7 @@ module Claw.Internal.Conversion (
     convertSafely,
 ) where
 
-import Claw.FS.Read (doesFileExist)
+import Claw.FS.Read (doesPathExist, isRegularFile)
 import Claw.FS.Write (trash)
 import Control.Exception.Extra (ignore)
 import Data.Functor ((<&>))
@@ -24,18 +24,18 @@ convertInPlace conversionFn findObsoleteFn original = do
         Just converted -> findObsoleteFn original converted >>= trash
 
 -- | Given a conversion function that takes a src and dst path and tries to convert src to dst,
--- yields a new conversion function, that checks that src is an existing file (not a directory),
+-- yields a new conversion function, that checks that src is a regular file (not a directory or symlink),
 -- that src /= dst, and that dst does not yet exist, before attempting to convert.
 -- Ignores any exceptions from the conversion function.
 -- If the conversion was successful (i.e. a new file was created), returns the path to the new file.
 convertSafely :: (FilePath -> FilePath -> IO ()) -> FilePath -> FilePath -> IO (Maybe FilePath)
 convertSafely convertFn src dst = do
-    src_exists <- doesFileExist src
-    dst_taken <- doesFileExist dst
+    src_exists <- isRegularFile src
+    dst_taken <- doesPathExist dst
     if src == dst || not src_exists || dst_taken
         then
             return Nothing
         else do
             -- Ignore all exceptions, such as caused by e.g. wrong filenames.
             ignore (convertFn src dst)
-            doesFileExist dst <&> \exists -> if exists then Just dst else Nothing
+            doesPathExist dst <&> \exists -> if exists then Just dst else Nothing
