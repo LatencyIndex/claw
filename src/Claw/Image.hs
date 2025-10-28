@@ -63,8 +63,8 @@ _clampSmaller x (w, h) =
      in both (mulRII scale) (w, h)
 
 -- Given an original image and its converted version, returns which, if any, can be discarded.
-obsoleteImage :: FilePath -> FilePath -> IO (Maybe FilePath)
-obsoleteImage original converted = do
+findObsolete :: FilePath -> FilePath -> IO (Maybe FilePath)
+findObsolete original converted = do
     m_orig_size <- getFileSize original
     m_conv_size <- getFileSize converted
     return $ case (m_orig_size, m_conv_size) of
@@ -89,4 +89,4 @@ toWebp src = do
 
 -- | Convert to .webp, deleting the original image on success.
 toWebpDestructive :: FilePath -> IO ()
-toWebpDestructive = convertDestructive toWebp obsoleteImage
+toWebpDestructive = convertDestructive toWebp findObsolete
