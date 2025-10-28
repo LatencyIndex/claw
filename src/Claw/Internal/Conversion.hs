@@ -54,7 +54,9 @@ findObsoleteBySize minSizeAbs maxSizeRel original converted = do
     m_orig_size <- getFileSize original
     m_conv_size <- getFileSize converted
     return $ case (m_orig_size, m_conv_size) of
-        (Just orig_size, Just conv_size) -> Just (if small_enough && big_enough then original else converted)
+        (Just orig_size, Just conv_size)
+            | small_enough && big_enough -> Just original
+            | otherwise -> Just converted
           where
             max_size = maxSizeRel original * fromInteger orig_size
             small_enough = fromInteger conv_size <= max_size
