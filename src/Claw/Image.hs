@@ -65,9 +65,7 @@ _clampSmaller x (w, h) =
 webpFindObsolete :: FilePath -> FilePath -> IO (Maybe FilePath)
 webpFindObsolete = findObsoleteBySize minSizeAbs maxSizeRel where
     minSizeAbs = 2048 -- Images smaller than 2kB are probably broken.
-    maxSizeRel :: String -> Float
-    maxSizeRel ".png" = 0.5 -- png is lossless, so harder to justify replacing it.
-    maxSizeRel _ = 0.9
+    maxSizeRel = 0.9 -- webp supports lossless encoding, so no need to special-case .png
 
 -- | Convert to .webp, returning the path to the converted image on success.
 -- Attempts to preserve estimated image quality.

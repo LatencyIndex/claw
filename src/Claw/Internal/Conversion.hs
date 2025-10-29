@@ -49,7 +49,7 @@ convertSafely convertFn src dst = do
 --      minSizeAbs: converted files smaller than this many bytes are considered broken
 --      maxSizeRel: given the extension of the source file (e.g. @.jpg@), returns the maximum size of the converted file
 --                  relative to the original, before it is considered too big
-findObsoleteBySize :: Integer -> (String -> Float) -> FilePath -> FilePath -> IO (Maybe FilePath)
+findObsoleteBySize :: Integer -> Float -> FilePath -> FilePath -> IO (Maybe FilePath)
 findObsoleteBySize minSizeAbs maxSizeRel original converted = do
     m_orig_size <- getFileSize original
     m_conv_size <- getFileSize converted
@@ -58,7 +58,7 @@ findObsoleteBySize minSizeAbs maxSizeRel original converted = do
             | small_enough && big_enough -> Just original
             | otherwise -> Just converted
           where
-            max_size = maxSizeRel original * fromInteger orig_size
+            max_size = maxSizeRel * fromInteger orig_size
             small_enough = fromInteger conv_size <= max_size
             big_enough = minSizeAbs < conv_size
         _ -> Nothing

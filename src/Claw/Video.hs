@@ -81,8 +81,7 @@ mp4FindObsolete :: FilePath -> FilePath -> IO (Maybe FilePath)
 mp4FindObsolete = findObsoleteBySize minSizeAbs maxSizeRel
   where
     minSizeAbs = 8096 -- Videos smaller than 8kB are probably broken.
-    maxSizeRel :: String -> Float
-    maxSizeRel _ = 0.9
+    maxSizeRel = 0.9
 
 toMp4 :: Int -> FilePath -> IO (Maybe FilePath)
 toMp4 quality src = do
