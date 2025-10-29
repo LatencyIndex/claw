@@ -190,12 +190,12 @@ getFileSize file = ifM (isRegularFile file) fileSize (return Nothing)
     fileSize = eitherToMaybe <$> try_ (D.getFileSize file)
 
 -- | Appends numbers to the end of the filename until it is unique.
--- E.g. given @file.jpg@, it will try @file.jpg@, @file0.jpg@, @file1.jpg@,.. up to @file999.jpg@
+-- E.g. given @file.jpg@, it will try @file.jpg@, @file_0.jpg@, @file_1.jpg@,.. up to @file_999.jpg@
 findUnique :: FilePath -> IO (Maybe FilePath)
 findUnique file =
     let
         prefix = getDir file </> getBaseName file
-        suffixes = "" : (show <$> [0 :: Int .. 999])
+        suffixes = "" : (("_" ++) . show <$> [0 :: Int .. 999])
         ext = getExt file
         candidates :: [FilePath]
         candidates = (\suffix -> prefix ++ suffix <.> ext) <$> suffixes
