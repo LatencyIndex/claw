@@ -5,11 +5,10 @@ import Claw.Image (countFrames, toWebpDestructive)
 import Claw.Video (toMp4Destructive)
 import Data.Char (toLower)
 
--- | Destructively convert an image to a smaller format, .webp or .mp4.
+-- | Destructively convert an image to a smaller format, .webp or .mp4 for animations.
 -- On success, trashes the original file.
 compressDestructive :: FilePath -> IO ()
 compressDestructive path = case toLower <$> getExt path of
-    ".webp" -> return () -- already compressed
     ".png" -> toWebpDestructive path
     ".jpg" -> toWebpDestructive path
     ".jpeg" -> toWebpDestructive path
@@ -19,7 +18,7 @@ compressDestructive path = case toLower <$> getExt path of
         case nb_frames of
             Just n
                 | n == 1 -> toWebpDestructive path -- static image in gif format
-                -- gifs with very few frames are probably slideshows
+                -- gifs with very few frames are probably slideshows, so don't convert them.
                 | n > 20 -> toMp4Destructive 24 path
                 | otherwise -> return ()
             Nothing -> return ()
