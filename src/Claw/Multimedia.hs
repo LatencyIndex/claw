@@ -1,6 +1,7 @@
-module Claw.Multimedia (compressDestructive) where
+module Claw.Multimedia (compressDestructive, compressRecursive) where
 
 import Claw.FS.Path (getExt)
+import Claw.FS.Read (treeOrdinary)
 import Claw.Image (countFrames, toWebpDestructive)
 import Claw.Video (toMp4Destructive)
 import Data.Char (toLower)
@@ -23,3 +24,18 @@ compressDestructive path = case toLower <$> getExt path of
                 | otherwise -> return ()
             Nothing -> return ()
     _ -> return ()
+
+-- | Apply compressDestructive to the files in the given folder and all subfolders
+-- Does not follow or try to compress symlinks.
+compressRecursive :: FilePath -> IO ()
+compressRecursive dir = do
+    files <- zip [1 ..] . filter isCompressible <$> treeOrdinary dir
+    let n = length files
+        compressVerbose :: (Int, FilePath) -> IO ()
+        compressVerbose (i, path) = do
+            putStrLn $ "compressing " ++ show i ++ "/" ++ show n ++ ": " ++ path
+            compressDestructive path
+    mapM_ compressVerbose files
+  where
+    isCompressible :: FilePath -> Bool
+    isCompressible = (`elem` [".png", ".jpg", ".jpeg", ".bmp", ".gif"]) . (toLower <$>) . getExt
