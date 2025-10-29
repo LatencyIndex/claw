@@ -21,8 +21,7 @@ compressDestructive path = case toLower <$> getExt path of
                 | n == 1 -> toWebpDestructive path -- static image in gif format
                 -- gifs with very few frames are probably slideshows, so don't convert them.
                 | n > 20 -> toMp4Destructive 24 path
-                | otherwise -> return ()
-            Nothing -> return ()
+            _ -> return ()
     _ -> return ()
 
 -- | Apply compressDestructive to the files in the given folder and all subfolders
