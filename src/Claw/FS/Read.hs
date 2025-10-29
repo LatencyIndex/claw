@@ -5,6 +5,7 @@ module Claw.FS.Read (
     cd,
     getMetadata,
     lsDir,
+    treeOrdinary,
     ls,
     lsMeta,
     pwd,
@@ -14,6 +15,9 @@ module Claw.FS.Read (
     doesDirectoryExist,
     isRegularFile,
     isSymlink,
+    isSymlink',
+    isNotSymlink,
+    isNotSymlink',
     getFileSize,
 ) where
 
@@ -23,16 +27,19 @@ import Claw.Internal.PrettyPrint (Pretty, pprint)
 import Claw.Time (UTCTime, getCurrentTimeZone, showTime, utcToZonedTime)
 import Control.Exception (SomeException, try)
 import Control.Exception.Extra (try_)
+import Control.Monad (filterM, (>=>))
 import Control.Monad.Extra (findM, ifM)
 import Data.Either (fromRight, rights)
 import Data.Either.Extra (eitherToMaybe)
 import Data.Functor ((<&>))
 import Data.List (sort, transpose)
+import Data.Maybe (fromMaybe)
 import Data.Ord (comparing)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Numeric (showFFloat)
 import System.Directory (doesDirectoryExist, doesFileExist, doesPathExist)
 import qualified System.Directory as D
+import System.Directory.Extra (listFilesInside)
 import qualified System.Posix.Files as P
 
 -- | Express the size of data in the most appropriate unit of bytes, as a (quantity, unit) pair.
@@ -129,6 +136,10 @@ getMetadata filepath = try (P.getSymbolicLinkStatus filepath) <&> fmap mkMetadat
 lsDir :: FilePath -> IO [FilePath]
 lsDir dir = try_ (D.listDirectory dir) <&> fmap (dir </>) . fromRight []
 
+-- | Recursively list all non-symlink files (not directories) in the directory.
+treeOrdinary :: FilePath -> IO [FilePath]
+treeOrdinary = listFilesInside isNotSymlink' >=> filterM isRegularFile
+
 -- | Names of all entries in the working directory, without the special entries @.@ and @..@
 -- Entries given relative to the working directory, i.e. only their filenames are returned.
 ls :: IO [FilePath]
@@ -156,11 +167,19 @@ isRegularFile path = do
         Left _ -> False
         Right metadata -> is_regular_file metadata
 
--- | Warning: if @dir_link@ is a symlink to a directory, then
--- @isSymlink "dir_link" == True@
--- @isSymlink "dir_link/" == False@
 isSymlink :: FilePath -> IO (Maybe Bool)
 isSymlink = fmap eitherToMaybe . try_ . D.pathIsSymbolicLink
+
+-- | Path exists and is a symlink.
+isSymlink' :: FilePath -> IO Bool
+isSymlink' = (fromMaybe False <$>) . isSymlink
+
+isNotSymlink :: FilePath -> IO (Maybe Bool)
+isNotSymlink = fmap (not <$>) . isSymlink
+
+-- | Path exists and is not a symlink.
+isNotSymlink' :: FilePath -> IO Bool
+isNotSymlink' = (fromMaybe False <$>) . isNotSymlink
 
 -- | In bytes. @Nothing@ if path is not a regular file.
 getFileSize :: FilePath -> IO (Maybe Integer)
