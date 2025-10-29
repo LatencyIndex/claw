@@ -69,13 +69,14 @@ webpFindObsolete = findObsoleteBySize minSizeAbs maxSizeRel where
     maxSizeRel ".png" = 0.5 -- png is lossless, so harder to justify replacing it.
     maxSizeRel _ = 0.9
 
--- | Convert to 90 quality .webp, returning the path to the converted image on success.
+-- | Convert to .webp, returning the path to the converted image on success.
+-- Attempts to preserve estimated image quality.
 toWebp :: FilePath -> IO (Maybe FilePath)
 toWebp src = do
     m_dst <- findUnique (replaceExt ".webp" src) -- Find free destination filename.
     case m_dst of
         Nothing -> return Nothing -- No free filename found - give up.
-        Just dst -> convert (0, 0) 90 src dst
+        Just dst -> convert (0, 0) 0 src dst
 
 -- | Convert to .webp, trashing the original image on success.
 toWebpDestructive :: FilePath -> IO ()
