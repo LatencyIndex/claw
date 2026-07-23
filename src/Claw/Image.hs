@@ -3,6 +3,7 @@ module Claw.Image (
     convert,
     countFrames,
     getSize,
+    limitSizeDestructive,
     toWebpDestructive,
 ) where
 
@@ -40,6 +41,19 @@ convertUnsafe (w, h) quality src dst =
         qualityArgs = if doQuality then ["-quality", show quality] else []
      in
         callProcessSafe "magick" ([src] ++ resizeArgs ++ qualityArgs ++ [dst])
+
+-- | Resize image in-place, overwriting the original file.
+resizeDestructive :: (Int, Int) -> FilePath -> IO ()
+resizeDestructive dims src = convertUnsafe dims 0 src src
+
+-- | Resize the image so the smallest dimension <= maxSize, keeping the aspect ratio.
+-- Overwrites the original file.
+limitSizeDestructive :: Int -> FilePath -> IO ()
+limitSizeDestructive maxSize src = do
+    mdims <- getSize src
+    case mdims of
+        Nothing -> return ()
+        Just dims -> resizeDestructive (_clampSmaller maxSize dims) src
 
 -- | Yields Nothing on failure.
 countFrames :: FilePath -> IO (Maybe Int)
